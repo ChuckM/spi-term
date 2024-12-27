@@ -15,8 +15,8 @@ the learning curve has been made artificially steep by the choices for
 everything that make up a computer system. This has, for many, resulted
 in a resurgence of "retro" computer recreations and simulations.
 
-My "ah ha!" moment was teaching a student to program in the C language. For **_me_**,
-it started simply with a four line program:
+My "ah ha!" moment was teaching a student to program in the C language.
+For **_me_**, it started simply with a four line program:
 ```C
 #include <stdio.h>
 int main(int argc, char *argv) {
@@ -146,31 +146,42 @@ The three interfaces that are supported by SPI-Term are the serial peripheral
 interface (SPI), the inter-integrated circuit interface (I2C), and the
 universal asynchronous serial interface or (UART).
 
+In addition to those interfaces, four signal lines are common to all interfaces.
+These are:
+  * V+, the positive voltage supply (this powers the SPI-Terminal)
+  * GND, the ground reference and supply return. (this is the signal all other 
+    signals are relative too)
+  * PDA, peripheral data available, this indicates the SPI-Terminal has data
+    from the user to send.
+  * RESET, to reset the SPI-Terminal into a known state.
+
 The signalling levels, or what counts as 1's or 0's on the line, are all 
 nominally something greater than 1.5V as logic level '1', and ground
 or < 0.25V for logic level '0'. The maximum level should be no more than 5v
 and the low level should be non-negative. The I2C pins are 'open collector'
 which means they expect to be pulled to a logical '1' level by the 
 microcontroller, and either the microcontroller or the peripheral will pull
-them down to 'ground' (0v) when sending logic 0's on them. 
+them down to ground (0v) when sending logic 0's on them. 
 
 Whichever interface is in use, they expect the pins V+ and GND to be
 connected to the logic voltage supply and the digital ground of the
 microcontroller. Different implementations of SPI-Term will have different
 current requirements. The SPI-Term specification requires that a SPI-Term 
-accept any voltage between 3.2V and 5v on the V+ pin and it will convert
+accept any voltage between 3.3V and 5v on the V+ pin and it will convert
 that internally if necessary to the power needed by the device. 
 
 ### SPI Interface
 
 The simplest serial interface is the serial peripheral interface which
-presents as 4 (or 5) I/O lines to the microcontroller. These are nominally
+presents as 4 I/O lines to the microcontroller. These are nominally
 serial clock (SCLK), peripheral-out/host-in (POHI), host-out/peripheral-in
-(HOPI), and device select (DS). The fifth signal is peripheral-data-available
-(PDA). This is of course the same definitions as the SPI interface made popular
+(HOPI), and device select (DS). It shares two lines, reset and peripheral
+data available with the other interfaces.
+
+These are, of course, the same definitions as the SPI interface made popular
 by Texas Instruments with the pesky master and slave bits renamed.
 
-The addition of PDA to this definition is there because our device generates
+he addition of PDA to this definition is there because our device generates
 data from a user's key presses, knob turning, or pointer movements. Rather
 than have the micro-controller continually poll the device to see if something
 has happened, we collect all of those events into this single signal that
@@ -180,10 +191,48 @@ The host can send data to our peripheral at any time. The use of DS tells the
 peripheral that the host is now speaking and asks as a 'start of transaction'
 signal. 
 
+Of the three interfaces, this one has the most pins (8) which are the four
+SPI pins and the four shared pins (V+, GND, PDA, RESET).
+
 ### I2C Interface
 
-The I2C interface is slightly more complicated than SPI while using one fewer
-I/O pins. The signals are serial data (SDA), serial clock (SCLK), and
-peripheral data available (PDA). 
+The I2C interface is slightly more complicated than SPI while using two fewer
+I/O pins. The signals are serial data (SDA) and serial clock (SCLK).
+
 Like SPI it is a clocked interface where data is clocked into the
-device by the serial 
+device by the serial, unlike SPI it sticks to one of three "standard" rates,
+either 100 kHz, 400 kHz, or 1 MHz clock rates. This makes it slower than
+SPI but it uses fewer signal lines. 
+
+### Serial Interface
+
+This is the 'classic' terminal I/O interface although back in the day it used
+RS-232, a signaling standard that replaced logic levels with levels that were
+plus or minus 12v. That enabled RS-232 cables to go the long distance between
+the machine room where the computer was, to room where the terminal was
+situated. In todays environments the computer is quite portable and generally
+sitting right next to the terminal. This means using standard logic levels
+between the computer and terminal does not impair the utility of the terminal.
+
+An asynchronous serial interface works well at the expense of having to agree
+ahead of time what the clock (or baud) rate is. Back in the day, 9600, 38400,
+and 115200 were all valid baud rates. The spi-term limits itself to 115200
+which is "fast" as terminals go and doesn't result in errors even when the 
+signal lines are "long". Of the three interfaces it is the slowest though.
+
+The serial interface uses two pins, transmit (TX) and receive (RX). This gives
+it the same number of pins as I2C (6, two for the interface and 4 in common)
+but unlike I2C they are unidirectional so they can send data at the same time
+they are reciving data.
+
+### Summary
+
+Each of these choices has plusses and minuses and the SPI-Term supports all
+three so that the trade-offs can be made based on what you are trying to do
+with it. All of the capabilities of the SPI-Term are accessible over any of
+the interfaces however they will have differences in how those capabilities
+are used. This will be discussed more in the software section.
+
+## Why Three Versions?
+
+
