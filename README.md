@@ -225,7 +225,7 @@ it the same number of pins as I2C (6, two for the interface and 4 in common)
 but unlike I2C they are unidirectional so they can send data at the same time
 they are reciving data.
 
-### Summary
+### Interface Summary
 
 Each of these choices has plusses and minuses and the SPI-Term supports all
 three so that the trade-offs can be made based on what you are trying to do
@@ -235,4 +235,50 @@ are used. This will be discussed more in the software section.
 
 ## Why Three Versions?
 
+In my grant proposal I outlined three realizations of this idea, we can call
+them 'mini', 'regular', and 'max'. The explanation for three versions is that
+terminals, like any system, are a set of compromises based on expected use.
+If you have done any engineering professionally you will immediately recognize
+these as the constraints on the design space. So let's look at the constraints
+and why they exist for a moment.
+
+### The "mini" SPI-Term
+
+I got started down that path when the display I would have used for
+a project was no longer available. This led me to the problem of needing
+new libraries for an equivalent display that I _could_ get. Of course
+ordering a new display and waiting for it to arrive can be time consuming
+so in the interim I had a display in my "junk pile" that would be a servicable
+intermediary display. I call this the "Oh gosh, now I need
+to load a different library and change my code because this display is
+different than the one I was using." problem.
+
+I also had a bunch of "BluePill" boards. These boards are a cheap knock-off
+of the
+[Maple Mini](https://stm32-base.org/boards/STM32F103C8T6-Maple-Mini-Clone.html)
+which was an STM32F103 based SBC that people used with the Arduino platform.
+Because of the popularity of the chip, there were many knock-offs and you
+could (and still can as of this writing!) buy them for about a $1 each on 
+[Aliexpress](https://www.aliexpress.us) (search for 'blue pill stm32')
+from a bunch of different vendors.
+
+So the "simple" thing for me to do, was to write some firmware for the
+BluePill that acted like an I2C peripheral and emulated the display I
+was going to use, while driving the display I had on hand.
+
+Flash forward to when the display I ordered arrives, and it dawns on me that
+I don't really _need_ to swap out the setup, just the display I'm using. And
+that was when I thought it would be a good idea to create a "standard" display
+and then I could use what ever display I had on hand and it should "just work."
+
+While debugging, I had wired up some push buttons to the BluePill and set it
+up to capture their state in an emulated "register" of my i2c device. I did
+that so that I could more easily debug things and send signals to my program
+which was on the main microcontroller. 
+
+When I stepped back away from the project it occurred to me I had created a
+somewhat more capable
+["LED & Key"](https://www.universal-solder.ca/product/led-and-key-module-for-arduino-with-tm1638/)
+gizmo that folks had been using with Arduinos already. 
+![LED and Key peripheral](led-and-key.jpg)
 
