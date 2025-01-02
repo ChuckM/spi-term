@@ -281,5 +281,12 @@ somewhat more capable
 ["LED & Key"](https://www.universal-solder.ca/product/led-and-key-module-for-arduino-with-tm1638/)
 gizmo that folks had been using with Arduinos already. 
 
+<div style='lmargin:auto;rmargin:auto'>
 ![LED and Key peripheral](led_and_key.jpg)
+The LED and Key peripheral worked over a serial interface and let you display
+digits or on/off LEDs, and to monitor pushbuttons in software on the _host_ 
+microcontroller. It contained no 'smarts' of its own.
+</div>
+
+
 
