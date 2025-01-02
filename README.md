@@ -280,5 +280,6 @@ When I stepped back away from the project it occurred to me I had created a
 somewhat more capable
 ["LED & Key"](https://www.universal-solder.ca/product/led-and-key-module-for-arduino-with-tm1638/)
 gizmo that folks had been using with Arduinos already. 
-![LED and Key peripheral](led-and-key.jpg)
+
+![LED and Key peripheral](led_and_key.jpg)
 
