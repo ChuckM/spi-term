@@ -1,7 +1,9 @@
 Dedicated I/O Device for Small Computers
 ========================================
 
-This project is to create a "standard" user interaction device which
+## Introduction and problem statement
+
+This project is to create a user interaction device which
 offloads the common display and I/O things that someone writing programs
 on resource constrained systems would otherwise have to do themselves.
 
@@ -25,10 +27,12 @@ int main(int argc, char *argv) {
 ```
 For the student though, using an Ardunio board, it was much more complicated.
 
-The complication was entirely centered around importing Arduino libraries
-to do do serial I/O, and then to connect those to the "Serial Monitor"
-and then having to initialize the serial subsystem and write to it. In
-my first experience, all of that complexity was hidden by two things,
+The complication was entirely centered around setting up the Arduino environment,
+importing Arduino libraries to do do I/O, and then to connect those to 
+the "Serial Monitor." Additionaly the student is responsible for initializing
+the serial subsystem and carefully writing to it. 
+
+In my first experience, all of that complexity was hidden by two things,
 the operating system did the serial initialization and the computer
 terminal handled all of the collecting my keystrokes and sending me text.
 
@@ -40,7 +44,7 @@ learning to program, you needed even more complexity of adding graphics
 libraries and fonts and display chip drivers. And I asked, is there
 something I could do here to help simplify this? To reduce the steepness
 of the learning curve by abstracting away things that you don't need to
-know about to learn to program?
+know about when you are just starting to learn to program?
 
 I thought perhaps if there was a standard 'terminal' that hooked up
 to these development boards in a such a way that they allowed the
@@ -49,7 +53,7 @@ capabilities in a standard way, and interface with them in a standard
 way, then it would be much simpler and we could make `helloworld.c`
 a very simple program for the new programmer once again.
 
-## What is a terminal?
+### What is a terminal?
 
 In my office I have a Digital Equipment Corporation (DEC) [VT-420
 terminal](https://en.wikipedia.org/wiki/VT420).  It displays 25 lines
@@ -61,22 +65,25 @@ simple graphics on the screen.
 All of the software that DEC wrote could use either terminal, what
 is more they could change their behavior based on which terminal they
 were interfacing to. They did that by virtue of the terminal sending an
-"identifier" string when asked by the computer. The letters and the
-font used were up to the terminal although there were somethings you
-could change like bold, underlining, reverse video, or flashing. And
-even terminals that were character driven, some characters were lines
-and curves so you could build simple boxes.
+"identifier" string when asked by the computer.
 
-On the computer side, all of the communication goes across the serial
-line so from an I/O perspective that is fairly simple. And all of the
+The letters and the font used were up to the terminal although there
+were somethings you could change like bold, underlining, reverse video,
+or blinking text. Some terminals included characters which were simply
+line segments and you could combine them to create simple boxes on
+the screen.
+
+All of the communication between the computer and the terminal was across
+the serial line so from an I/O perspective that is fairly simple. All of the
 'features' of the terminal are accessed by sending special "escape"
-characters that the  terminal interpreted not as characters to display but
+characters that the terminal interpreted not as characters to display but
 as an operation to perform such as moving the cursor, clearing the screen,
 or changing the display attributes of the next character on the screen.
 
 Terminals would also typically have a keyboard that the _terminal_
 would scan and watch of key presses and translate those key presses into
-characters that would be sent back over the serial line to the computer.
+characters. Typed characters would be sent back over the serial line
+to the computer.
 
 This was all of the I/O needed in my college career to teach an
 entire computer science curriculum! And once one understood all of the
@@ -85,7 +92,7 @@ interfaces, or other more complicated computer/device interactions
 were simpler because the student was not trying to understand computer
 programming at the same time as these other concepts.
 
-## What's wrong with special purpose libraries?
+### What's wrong with special purpose libraries?
 
 Nothing! That's the easiest answer, and programmers will always encounter
 them with modern programming environments. We can however limit the
@@ -109,9 +116,10 @@ void loop() { }
 And for that program to work _for any conforming SPI terminal_ that is
 attached to the board used for development. What is more, the program
 would work _when not connected to a "big" computer, only to power._
-
 That latter bit is where the real difference in having a "terminal"
-becomes apparent. When I was learning to program I would often program
+becomes apparent.
+
+When I was learning to program I would often program
 simple games and they would interact with the terminal by asking questions
 and then responding based on those inputs. I didn't need anything other
 than the computer and the terminal.
@@ -148,12 +156,15 @@ universal asynchronous serial interface or (UART).
 
 In addition to those interfaces, four signal lines are common to all interfaces.
 These are:
-  * V+, the positive voltage supply (this powers the SPI-Terminal)
-  * GND, the ground reference and supply return. (this is the signal all other 
+
+  * **V+**, the positive voltage supply (this powers the SPI-Terminal)
+  * **GND**, the ground reference and supply return. (this is the signal all other 
     signals are relative too)
-  * PDA, peripheral data available, this indicates the SPI-Terminal has data
-    from the user to send.
-  * RESET, to reset the SPI-Terminal into a known state.
+  * **PDA** -- Peripheral Data Availabler. This signal goes from the SPI-Term
+    to the computer and indicates the SPI-Terminal has data from the 
+    user available.
+  * **RESET** -- Reset. This signal goes from the computer to the SPI-Term and
+    will reset the SPI-Terminal into a known state.
 
 The signalling levels, or what counts as 1's or 0's on the line, are all 
 nominally something greater than 1.5V as logic level '1', and ground
@@ -175,21 +186,20 @@ that internally if necessary to the power needed by the device.
 The simplest serial interface is the serial peripheral interface which
 presents as 4 I/O lines to the microcontroller. These are nominally
 serial clock (SCLK), peripheral-out/host-in (POHI), host-out/peripheral-in
-(HOPI), and device select (DS). It shares two lines, reset and peripheral
-data available with the other interfaces.
+(HOPI), and device select (DS).
 
 These are, of course, the same definitions as the SPI interface made popular
 by Texas Instruments with the pesky master and slave bits renamed.
 
-he addition of PDA to this definition is there because our device generates
+The addition of PDA to this definition is there because our device generates
 data from a user's key presses, knob turning, or pointer movements. Rather
 than have the micro-controller continually poll the device to see if something
 has happened, we collect all of those events into this single signal that
 originates on our device and is an input into the host.
 
 The host can send data to our peripheral at any time. The use of DS tells the
-peripheral that the host is now speaking and asks as a 'start of transaction'
-signal. 
+peripheral that the host is now speaking and acts as a 'start of transaction'
+signal. DS going inactive resets the transaction state.
 
 Of the three interfaces, this one has the most pins (8) which are the four
 SPI pins and the four shared pins (V+, GND, PDA, RESET).
@@ -218,12 +228,15 @@ An asynchronous serial interface works well at the expense of having to agree
 ahead of time what the clock (or baud) rate is. Back in the day, 9600, 38400,
 and 115200 were all valid baud rates. The spi-term limits itself to 115200
 which is "fast" as terminals go and doesn't result in errors even when the 
-signal lines are "long". Of the three interfaces it is the slowest though.
+signal lines are "long". Of the three interfaces it has the slowest throughput.
 
-The serial interface uses two pins, transmit (TX) and receive (RX). This gives
-it the same number of pins as I2C (6, two for the interface and 4 in common)
-but unlike I2C they are unidirectional so they can send data at the same time
-they are reciving data.
+The serial interface uses two pins, transmit (TX) which is a signal from the
+host to the SPI-Term,  and receive (RX) with is a signal from the SPI-Term to
+the host. This gives it the same number of pins as I2C (6, two for the 
+interface and 4 in common) but unlike I2C they are unidirectional so the SPI-Term
+can be receiving data from the host at the same time that it is sending data
+to the host. 
+
 
 ### Interface Summary
 
@@ -241,8 +254,6 @@ terminals, like any system, are a set of compromises based on expected use.
 If you have done any engineering professionally you will immediately recognize
 these as the constraints on the design space. So let's look at the constraints
 and why they exist for a moment.
-
-### The "mini" SPI-Term
 
 I got started down that path when the display I would have used for
 a project was no longer available. This led me to the problem of needing
@@ -271,10 +282,27 @@ I don't really _need_ to swap out the setup, just the display I'm using. And
 that was when I thought it would be a good idea to create a "standard" display
 and then I could use what ever display I had on hand and it should "just work."
 
-While debugging, I had wired up some push buttons to the BluePill and set it
-up to capture their state in an emulated "register" of my i2c device. I did
-that so that I could more easily debug things and send signals to my program
-which was on the main microcontroller. 
+Another aspect of this idea came up while building my 'franken-display.'
+
+When doing embedded development it is useful to have some minimal
+indicators and some minimal inputs. Your typical 'blinky' type program
+will cause a like to blink and if you have a 'user' button, you can push
+it to indicate to the embedded program to 'do the thing we are debugging
+now.' It is surprisingly common to have those two things be the minimum
+set of debugging aids when doing development and it is the rational that
+makers of development board makers use to always include an LED and a
+button on their development boards.
+
+I had wired up some push buttons and LEDs to the BluePill. The
+BluePill could capture button state and reflect it in an emulated
+'register.' It could also take the contents of another emulated
+register and display that on the LEDs. 
+
+XXX
+
+I did that so
+that I could more easily debug things and send signals to my program
+which was on the main microcontroller.
 
 When I stepped back away from the project it occurred to me I had created a
 somewhat more capable
@@ -287,5 +315,14 @@ The LED and Key peripheral worked over a serial interface and let you display
 digits or on/off LEDs, and to monitor pushbuttons in software on the _host_ 
 microcontroller. It contained no 'smarts' of its own.
 
+In this way it was different than my gizmo because I had a microcontroller
+actually driving the display, in emulation, of another display. I felt like
+that was a waste of even a cheap MCU so I looked at having the i2c peripheral
+that I implemented be a bit smarter than the one it had replaced.
 
+### The SPI-Term "mini"
 
+I asked what would this gizmo, that was a more sophisticated version of the
+LED&KEY gizmo really do? And decided that the simplest thing would be to
+implement the common "LCD Graphics Libraries" on the local MCU and then
+create a way for the host MCU to communicate what it wanted displayed. 
